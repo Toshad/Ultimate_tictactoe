@@ -92,9 +92,11 @@ def start():
         s = "---------"
         m = {}
         dfs(s,'x')
+        dfs(s,'o')
         i = 0;
-        print check("x-o-ooxxx",'x')
-        print m["x-o-oox-xx"]
+    #    print check("x-o-ooxxx",'x')
+     #   print m["x-o-oox-xx"]
+        
         i=0
         rrr = m.keys()
         rrr.sort()
@@ -126,14 +128,20 @@ class Player1:
 		pass
 
 	def move(self,temp_board,temp_block,old_move,flag):
+                if(old_move==(-1,-1)):
+                    return (4,4)
 		#List of permitted blocks, based on old move.
 		blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
 		#Get list of empty valid cells
 		cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
+                if flag=='x':
+                    other_flag='o'
+                else:
+                    other_flag='x'
 		#Choose a move based on some algorithm, here it is a random move.
-                optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 0)  #Levels to go
+                optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 2)  #Levels to go
         #print 'OPTIMAL:',optimal_move[0], optimal_move[1]
-		return cells[(optimal_move)]
+		return (optimal_move)
 
 class Player2:
 
@@ -142,13 +150,19 @@ class Player2:
 		pass
 
 	def move(self,temp_board,temp_block,old_move,flag):
+                if(old_move==(-1,-1)):
+                    return (4,4)
 		#List of permitted blocks, based on old move.
 		blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
 		#Get list of empty valid cells
 		cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
+                if flag=='x':
+                    other_flag='o'
+                else:
+                    other_flag='x'
 		#Choose a move based on some algorithm, here it is a random move.
-                optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 0)  #Levels to go
-		return cells[optimal_move]
+                optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 2)  #Levels to go
+		return optimal_move
 
 
 def init_minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, init_depth):
@@ -156,20 +170,21 @@ def init_minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA
 
         # Its our turn,
         blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
-	cells = get_empty_out_of(temp_board, blocks_allowed)
-
+    	cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
+        print cells
         max_hvalue,maxX,maxY = float('-inf'),-1,-1
         for i,j in cells:
                 temp_board[i][j] = flag
-                local_hvalue = minmax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, init_depth-1)
+                local_hvalue = minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, init_depth-1)
                 if local_hvalue > max_hvalue:
                         max_hvalue = local_hvalue
                         maxX = i
                         maxY = j
-                ALPHA = max(APLHA, max_hvalue)
+                ALPHA = max(ALPHA, max_hvalue)
                 if BETA <= ALPHA:   # Beta cut-off
+                        temp_board[i][j] = '-'
                         break;
-                temp_bord[i][j] = '-'
+                temp_board[i][j] = '-'
         print 'Expected Max Hvalue:', max_hvalue, 'at', maxX, maxY
         return maxX,maxY
 
@@ -184,69 +199,93 @@ def heuristic_9x9(board, pos, neg):
                 Hbig_boy[i] = heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg)
         s=[]
         x=0.0
-        for i in bigboy:
+        for i in big_boy:
             s.append('-')
             if Hbig_boy[i] == 1.0:
                 s[i]=pos
-            elif Hbigboy[i] == -1.0:
+            elif Hbig_boy[i] == -1.0:
                 s[i]=neg
-            x+=Hbigboy[i]
+            x+=Hbig_boy[i]
         s.append(pos)
-        x+=m[s]
-        return x
+        s=''.join(s)
+        x+=heuristic(s,pos,neg)
+        if pos =='x':
+            return x
+        else:
+            return -x
 
 
 
 #3_IN_A_ROW = 100
 #2_IN_A_ROW = 10
 #1_IN_A_ROW = 1
-
+def heuristic(s,pos,neg):
+        try:
+            return m[s];
+        except KeyError:
+            if(check(s,pos)):
+                return 1.0
+            else:
+                x=0
+                y=0
+                for i in s:
+                    if i==pos:
+                        x+=1
+                    elif i==neg:
+                        y+=1
+                return 0.2*(y-x)+0.05*(y-x)*(y-x)
 
 def heuristic_3x3(row1, row2, row3, pos, neg):                          
         # Skip cells which are already won
+    #    print row1,row2,row3
+#        print pos
         global m
-        s=''
-        s+=row1+row2+row3+pos                                                   #currently assumed that we will call heuristic only at pos
-        return m[s];
+        s=[]
+        s+=row1+row2+row3                                                   #currently assumed that we will call heuristic only at pos
+        s=''.join(s)
+        s+=pos
+        return heuristic(s,pos,neg)
         #pass
 
 
 
 # Alpha-beta also added
-def minimax(temp_board, temp_block, old_move, flag, other_flag, depth):
+def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, depth):
 	# Just return hvalue.
         if depth <= 0:
                 # Return the Hvalue of this state.
-                return heuristic_9x9(temp_board, 'x', 'o')
+                return heuristic_9x9(temp_board, flag,other_flag)
 
         elif depth%2 == 1:
                 # Find min
                 blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
-	        cells = get_empty_out_of(temp_board, blocks_allowed)
+	        cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
 
                 min_hvalue = float('inf')
                 for i,j in cells:
                         temp_board[i][j] = flag
-                        min_hvalue = min(min_hvalue, minmax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth-1))
+                        min_hvalue = min(min_hvalue, minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth-1))
                         BETA = min(BETA, min_hvalue)
                         if BETA <= ALPHA:   # Alpha cut-off
+                                temp_board[i][j] = '-'
                                 break;
-                        temp_bord[i][j] = '-'
+                        temp_board[i][j] = '-'
                 return min_hvalue
 
         elif depth%2 == 0:
                 # Find max
                 blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
-	        cells = get_empty_out_of(temp_board, blocks_allowed)
+	        cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
 
                 max_hvalue = float('-inf')
                 for i,j in cells:
                         temp_board[i][j] = flag
-                        max_hvalue = max(max_hvalue, minmax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth-1))
-                        ALPHA = max(APLHA, max_hvalue)
+                        max_hvalue = max(max_hvalue, minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth-1))
+                        ALPHA = max(ALPHA, max_hvalue)
                         if BETA <= ALPHA:   # Beta cut-off
+                                temp_board = '-'
                                 break;
-                        temp_bord[i][j] = '-'
+                        temp_board[i][j] = '-'
                 return max_hvalue
 
 
@@ -307,7 +346,8 @@ def get_empty_out_of(gameb, blal,block_stat):
 			for j in range(id2*3,id2*3+3):
 				if gameb[i][j] == '-':
 					cells.append((i,j))
-
+ #       if blal==[6,8]:
+  #          print cells
 	# If all the possible blocks are full, you can move anywhere
 	if cells == []:
 		new_blal = []
@@ -351,7 +391,9 @@ def check_valid_move(game_board, block_stat, current_move, old_move):
 	#List of permitted blocks, based on old move.
 	blocks_allowed  = determine_blocks_allowed(old_move, block_stat)
 	# We get all the empty cells in allowed blocks. If they're all full, we get all the empty cells in the entire board.
+#        print "bl",blocks_allowed
 	cells = get_empty_out_of(game_board, blocks_allowed, block_stat)
+#        print "cinv",cells
 	#Checks if you made a valid move.
 	if current_move in cells:
 		return True
@@ -482,11 +524,13 @@ def simulate(obj1,obj2):
 
 	WINNER = ''
 	MESSAGE = ''
-	TIMEALLOWED = 120
+	TIMEALLOWED = 12
 	p1_pts=0
 	p2_pts=0
 
 	print_lists(game_board, block_stat)
+        
+        print heuristic_9x9(game_board,'x','o')
 
 	while(1): # Main game loop
 
@@ -497,9 +541,11 @@ def simulate(obj1,obj2):
 		signal.alarm(TIMEALLOWED)
 #		ret_move_pl1 = pl1.move(temp_board_state, temp_block_stat, old_move, pl1_fl)
 
-		try:
-			ret_move_pl1 = pl1.move(temp_board_state, temp_block_stat, old_move, pl1_fl)
-		except:
+		#try:
+		ret_move_pl1 = pl1.move(temp_board_state, temp_block_stat, old_move, pl1_fl)
+		#except:
+                if False:
+                        print sys.exc_info()[0]
 			WINNER, MESSAGE = decide_winner_and_get_message('P1', 'L',   'TIMED OUT')
 		#	print MESSAGE
 			break
@@ -536,9 +582,11 @@ def simulate(obj1,obj2):
         	signal.signal(signal.SIGALRM, handler)
         	signal.alarm(TIMEALLOWED)
 
-        	try:
-           		ret_move_pl2 = pl2.move(temp_board_state, temp_block_stat, old_move, pl2_fl)
-        	except:
+#        	try:
+      		ret_move_pl2 = pl2.move(temp_board_state, temp_block_stat, old_move, pl2_fl)
+#        	except:
+                if False:
+                        print sys.exc_info()[0]
 			WINNER, MESSAGE = decide_winner_and_get_message('P2', 'L',   'TIMED OUT')
 			break
         	signal.alarm(0)
