@@ -96,14 +96,14 @@ def start():
         i = 0;
     #    print check("x-o-ooxxx",'x')
      #   print m["x-o-oox-xx"]
-        
         i=0
         rrr = m.keys()
-        rrr.sort()
+ #       rrr.sort()
         for k in rrr:
-                i += 1
+            if k[9] == 'o':
+                m[k]= -m[k]
                 #print k,":",m[k]
-        print i
+#        print i
 
 def handler(signum, frame):
     #print 'Signal handler called with signal', signum
@@ -171,11 +171,11 @@ def init_minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA
         # Its our turn,
         blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
     	cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
-        print cells
+        #print cells
         max_hvalue,maxX,maxY = float('-inf'),-1,-1
         for i,j in cells:
                 temp_board[i][j] = flag
-                local_hvalue = minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, init_depth-1)
+                local_hvalue = minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, init_depth-1)
                 if local_hvalue > max_hvalue:
                         max_hvalue = local_hvalue
                         maxX = i
@@ -209,10 +209,7 @@ def heuristic_9x9(board, pos, neg):
         s.append(pos)
         s=''.join(s)
         x+=heuristic(s,pos,neg)
-        if pos =='x':
-            return x
-        else:
-            return -x
+        return x
 
 
 
@@ -225,6 +222,8 @@ def heuristic(s,pos,neg):
         except KeyError:
             if(check(s,pos)):
                 return 1.0
+            elif check(s,neg):
+                return -1.0
             else:
                 x=0
                 y=0
@@ -233,11 +232,11 @@ def heuristic(s,pos,neg):
                         x+=1
                     elif i==neg:
                         y+=1
-                return 0.2*(y-x)+0.05*(y-x)*(y-x)
+                return 0.15*(y-x)+0.02*(y-x)*(y-x)
 
 def heuristic_3x3(row1, row2, row3, pos, neg):                          
         # Skip cells which are already won
-    #    print row1,row2,row3
+       # print row1,row2,row3
 #        print pos
         global m
         s=[]
@@ -264,7 +263,7 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
                 min_hvalue = float('inf')
                 for i,j in cells:
                         temp_board[i][j] = flag
-                        min_hvalue = min(min_hvalue, minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth-1))
+                        min_hvalue = min(min_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth-1))
                         BETA = min(BETA, min_hvalue)
                         if BETA <= ALPHA:   # Alpha cut-off
                                 temp_board[i][j] = '-'
@@ -280,7 +279,7 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
                 max_hvalue = float('-inf')
                 for i,j in cells:
                         temp_board[i][j] = flag
-                        max_hvalue = max(max_hvalue, minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth-1))
+                        max_hvalue = max(max_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth-1))
                         ALPHA = max(ALPHA, max_hvalue)
                         if BETA <= ALPHA:   # Beta cut-off
                                 temp_board = '-'
@@ -524,7 +523,7 @@ def simulate(obj1,obj2):
 
 	WINNER = ''
 	MESSAGE = ''
-	TIMEALLOWED = 12
+	TIMEALLOWED = 120
 	p1_pts=0
 	p2_pts=0
 
