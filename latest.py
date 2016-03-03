@@ -143,7 +143,7 @@ class Player48:
 	def move(self,temp_board,temp_block,old_move,flag):
                 print temp_board
                 if(old_move==(-1,-1)):
-                    return (4,4)
+                    return (3,1)#random.randrange(9), random.randrange(9) #(3,1)#(4,4)
 		#List of permitted blocks, based on old move.
 		#blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
 		#Get list of empty valid cells
@@ -152,13 +152,55 @@ class Player48:
                     other_flag='o'
                 else:
                     other_flag='x'
-		#Choose a move based on some algorithm, here it is a random move.
 
 
                 tmp_board=copy.deepcopy(temp_board)
-                optimal_move = init_minimax(tmp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 4)  #Levels to go
-                #print 'OPTIMAL:',optimal_move[0], optimal_move[1]
+                #tr = destroy(tmp_board, temp_block, old_move, flag, other_flag)
+                #if tr != -1:
+                #        return tr
+                optimal_move = init_minimax(tmp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 6)  #Levels to go
 		return (optimal_move)
+
+
+def destroy(temp_board, temp_block, old_move, flag, other_flag):
+        blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
+        cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
+
+        
+        s = ''
+        count = 0
+        X = -1
+        Y = -1
+        for i in blocks_allowed:
+                R = (i/3)*3
+                C = (i%3)*3
+                AA = temp_board[R][C:C+3]
+                BB = temp_board[R+1][C:C+3]
+                CC = temp_board[R+2][C:C+3]
+                if (AA == [other_flag, other_flag, '-'] or AA == ['-', other_flag, other_flag] or AA == [other_flag,'-', other_flag])   and BB == ['-', '-', '-'] and CC == ['-', '-', '-']:
+                    count += 1
+                    X = R
+                    for i in range(3):
+                            if AA[i] == '-':
+                                    Y = C + i
+                elif (BB == [other_flag, other_flag, '-'] or BB == ['-', other_flag, other_flag] or BB == [other_flag,'-', other_flag])   and AA == ['-', '-', '-'] and CC == ['-', '-', '-']:
+                    count += 1
+                    X = R+1
+                    for i in range(3):
+                            if BB[i] == '-':
+                                    Y = C + i
+                elif (CC == [other_flag, other_flag, '-'] or CC == ['-', other_flag, other_flag] or CC == [other_flag,'-', other_flag]) and AA == ['-', '-', '-'] and BB == ['-', '-', '-']:
+                    count += 1
+                    X = R+2
+                    for i in range(3):
+                            if CC[i] == '-':
+                                    Y = C + i
+
+        if count == 1:
+                return (X,Y)
+        return -1
+
+        
 
 class Player2:
 
@@ -169,17 +211,8 @@ class Player2:
 	def move(self,temp_board,temp_block,old_move,flag):
                 if(old_move==(-1,-1)):
                     return (4,4)
-		#List of permitted blocks, based on old move.
 		blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
-		#Get list of empty valid cells
 		cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
-                #if flag=='x':
-                #    other_flag='o'
-                #else:
-                #    other_flag='x'
-		#Choose a move based on some algorithm, here it is a random move.
-                #optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 4)  #Levels to go
-		#return optimal_move
                 return cells[random.randrange(len(cells))]
 
 
@@ -205,7 +238,7 @@ def init_minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA
                 if BETA <= ALPHA:   # Beta cut-off
                         break;
 
-        print 'Expected Max Hvalue:', max_hvalue, 'at', maxX, maxY
+        #print 'Expected Max Hvalue:', max_hvalue, 'at', maxX, maxY
         return maxX,maxY
 
 
@@ -220,7 +253,7 @@ def heuristic_9x9(board, pos, neg, blal):
                 if i in blal:
                         Hbig_boy[i] = heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg)
                 else:
-                        Hbig_boy[i] = (heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg) - heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], neg, pos))/2.0
+                        Hbig_boy[i] = (heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg) - heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], neg, pos))
 #        s=[]
 #        pass
         count = 0.0
@@ -234,10 +267,10 @@ def heuristic_9x9(board, pos, neg, blal):
 
         state = range(9)
         for i in big_boy:
-                if Hbig_boy>=4500:
+                if Hbig_boy[i] >= 4500:
                         state[i] = pos
                         count += 1
-                elif Hbig_boy <=-4500:
+                elif Hbig_boy[i] <=-4500:
                         state[i] = neg
                 else:
                         state[i] = '-'
@@ -315,15 +348,15 @@ def heuristic_3x3(row1, row2, row3, pos, neg):
         s+=row1
         s+=row2
         s+=row3         # currently assumed that we will call heuristic only at pos
-#        r=0.0
-#        for i in s:
-#                if i == pos:
-#                        r+=0.1
-#                elif i == neg:
-#                        r-=0.1
-#        s=''.join(s)
-#        s+=pos
-#        H += r
+        r=0.0
+        for i in s:
+                if i == pos:
+                        r+=0.1
+                elif i == neg:
+                        r-=0.1
+        s=''.join(s)
+        s+=pos
+        H += r
         H += heuristic(s,pos,neg)
         return H 
         #pass
