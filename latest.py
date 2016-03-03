@@ -223,24 +223,25 @@ def heuristic_9x9(board, pos, neg, blal):
                         Hbig_boy[i] = (heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg) - heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], neg, pos))/2.0
 #        s=[]
 #        pass
-        x=0.0
-        for i in big_boy:
+        count = 0.0
+#        for i in big_boy:
 #                s.append('-')
 #                if Hbig_boy[i] == 1.0:
 #                        s[i]=pos
 #                elif Hbig_boy[i] == -1.0:
 #                        s[i]=neg
-                x+=Hbig_boy[i]
+#                x+=Hbig_boy[i]
 
         state = range(9)
         for i in big_boy:
-                if Hbig_boy>=100:
+                if Hbig_boy>=4500:
                         state[i] = pos
-                elif Hbig_boy <=-100:
+                        count += 1
+                elif Hbig_boy <=-4500:
                         state[i] = neg
                 else:
                         state[i] = '-'
-        bigH = 100*heuristic_3x3(state[0:3],state[3:6],state[6:9],pos,neg)
+        bigH = 10*heuristic_3x3(state[0:3],state[3:6],state[6:9], pos, neg)
 
 #    for i in range(3):
 #
@@ -252,7 +253,7 @@ def heuristic_9x9(board, pos, neg, blal):
 #        x+=2.5*heuristic(s,pos,neg)
 
 
-        return bigH+x
+        return bigH + count*10
 
 
 
@@ -275,35 +276,33 @@ def heuristic(s,pos,neg):
 #        except KeyError:
 #                pass
 
-#        if check(s,pos) == 1:
-#                print s
-#                return 5000.0
-#        elif check(s,neg) == 1:
-#                print '-jghg',s
-#                return -5000.0
-#        else:
-        x=0
-        y=0
-        x+=hsh(s[0],s[1],s[2],pos,1.2)
-        x+=hsh(s[0],s[4],s[8],pos,1.2)
-        x+=hsh(s[0],s[3],s[6],pos,1.2)
-
-        x+=hsh(s[2],s[4],s[6],pos,1.2)
-        x+=hsh(s[2],s[5],s[8],pos,1.2)
-        x+=hsh(s[3],s[4],s[5],pos,1.2)
-        x+=hsh(s[1],s[4],s[7],pos,1.2)
-        x+=hsh(s[6],s[7],s[8],pos,1.2)
-
-        y+=hsh(s[0],s[3],s[6],neg,1)
-        y+=hsh(s[0],s[4],s[8],neg,1)
-        y+=hsh(s[0],s[1],s[2],neg,1)
-
-        y+=hsh(s[3],s[4],s[5],neg,1)
-        y+=hsh(s[6],s[7],s[8],neg,1)
-        y+=hsh(s[1],s[4],s[7],neg,1)
-        y+=hsh(s[2],s[5],s[8],neg,1)
-        y+=hsh(s[2],s[4],s[6],neg,1)
-        return x-y
+        if check(s,pos) == 1:
+                return 5000.0
+        elif check(s,neg) == 1:
+                return -5000.0
+        else:
+                x=0
+                y=0
+                x+=hsh(s[0],s[1],s[2],pos,1.2)
+                x+=hsh(s[0],s[4],s[8],pos,1.2)
+                x+=hsh(s[0],s[3],s[6],pos,1.2)
+        
+                x+=hsh(s[2],s[4],s[6],pos,1.2)
+                x+=hsh(s[2],s[5],s[8],pos,1.2)
+                x+=hsh(s[3],s[4],s[5],pos,1.2)
+                x+=hsh(s[1],s[4],s[7],pos,1.2)
+                x+=hsh(s[6],s[7],s[8],pos,1.2)
+        
+                y+=hsh(s[0],s[3],s[6],neg,1)
+                y+=hsh(s[0],s[4],s[8],neg,1)
+                y+=hsh(s[0],s[1],s[2],neg,1)
+        
+                y+=hsh(s[3],s[4],s[5],neg,1)
+                y+=hsh(s[6],s[7],s[8],neg,1)
+                y+=hsh(s[1],s[4],s[7],neg,1)
+                y+=hsh(s[2],s[5],s[8],neg,1)
+                y+=hsh(s[2],s[4],s[6],neg,1)
+                return x-y
 
 
 def heuristic_3x3(row1, row2, row3, pos, neg):
