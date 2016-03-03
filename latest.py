@@ -16,6 +16,7 @@ In case of any queries, please post on moodle.iiit.ac.in
 import sys
 import random
 import signal
+import copy
 
 class TimedOutExc(Exception):
         pass
@@ -27,28 +28,30 @@ def temp(s,c):
 
 def check(s,a):
         if isinstance(s,type("")):
-                                s = list(s)
+                s = list(s)
         h = 0
         for i in range(9):
-                            if s[i] == a:
-                                                        h += (1<<i)
+                if s[i] == a:
+                        h += (1<<i)
         if (h&7) == 7:
-                            return 1
+                return 1
         if (h&56) == 56:
-                            return 1
+                return 1
         if (h&448) == 448:
-                            return 1
+                return 1
         if (h&292) == 292:
-                            return 1
+                return 1
         if (h&146) == 146:
-                            return 1
+                return 1
         if (h&73) == 73:
-                            return 1
+                return 1
         if (h&273) == 273:
-                            return 1
+                return 1
         if (h&84) == 84:
-                            return 1
+                return 1
         return 0
+
+
 def dfs(s,c):
         global m
         if check(s,'x')==1:
@@ -59,33 +62,35 @@ def dfs(s,c):
                 return -1.0
 
         if temp(s,c) in m.keys():
-                            return m[temp(s,c)]
+                    return m[temp(s,c)]
 
         if isinstance(s,type("")):
-                           s = list(s)
-        x = -2.0
-        y = 2.0
+                    s = list(s)
+        x = float('-inf')
+        y = float('inf')
         fl = 0
         for i in range(9):
-                   if s[i] == '-':
+                if s[i] == '-':
                         s[i] = c;
                         r = ''.join(s)
                         if c == 'x':
-                            x =max(dfs(r,'o'),x)
+                                x += dfs(r,'o')
                         else:
-                            y = min(dfs(r,'x'),y)
+                                y += dfs(r,'x')
                         s[i]='-'
                         fl += 1
 
         if(fl==0):
-                 fl=1
+                fl=1
+#        if fl>2:
+#                fl=2
         r = ''.join(s)
         if c == 'x':
-          m[temp(r,c)] = x/fl
-          return x/fl
+                m[temp(r,c)] = x/fl
+                return x/fl
         else:
-          m[temp(r,c)] = y/fl
-          return y/fl
+                m[temp(r,c)] = y/fl
+                return y/fl
 
 def start():
         global m
@@ -94,24 +99,28 @@ def start():
         dfs(s,'x')
         dfs(s,'o')
         i = 0;
-    #    print check("x-o-ooxxx",'x')
-     #   print m["x-o-oox-xx"]
+        #print check("x-o-ooxxx",'x')
+        #print m["x-o-oox-xx"]
         i=0
         rrr = m.keys()
- #       rrr.sort()
-        
+        #rrr.sort()
+
         for k in rrr:
-    #        x='o'
-            if k[9] == 'o':
-                m[k]= -m[k]
-     #           x='x'
-      #      print k,":",m[k]
-       #     print k,",",heuristic(k,k[9],x)
-#        print i
+                #x='o'
+                if k[9] == 'o':
+                        m[k]= -m[k]
+                if check(k,k[9]):
+                        m[k]=200+m[k]
+                else:
+                        m[k]*=100
+                #x='x'
+                #print k,":",m[k]
+                #print k,",",heuristic(k,k[9],x)
+                #print i
 
 def handler(signum, frame):
-    #print 'Signal handler called with signal', signum
-    raise TimedOutExc()
+        #print 'Signal handler called with signal', signum
+        raise TimedOutExc()
 
 
 class ManualPlayer:
@@ -125,13 +134,14 @@ class ManualPlayer:
 
 
 
-class Player1:
+class Player48:
 
 	def __init__(self):
 		# You may initialize your object here and use any variables for storing throughout the game
 		pass
 
 	def move(self,temp_board,temp_block,old_move,flag):
+                print temp_board
                 if(old_move==(-1,-1)):
                     return (4,4)
 		#List of permitted blocks, based on old move.
@@ -143,8 +153,11 @@ class Player1:
                 else:
                     other_flag='x'
 		#Choose a move based on some algorithm, here it is a random move.
-                optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 4)  #Levels to go
-        #print 'OPTIMAL:',optimal_move[0], optimal_move[1]
+
+
+                tmp_board=copy.deepcopy(temp_board)
+                optimal_move = init_minimax(tmp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 4)  #Levels to go
+                #print 'OPTIMAL:',optimal_move[0], optimal_move[1]
 		return (optimal_move)
 
 class Player2:
@@ -160,13 +173,15 @@ class Player2:
 		blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
 		#Get list of empty valid cells
 		cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
-                if flag=='x':
-                    other_flag='o'
-                else:
-                    other_flag='x'
+                #if flag=='x':
+                #    other_flag='o'
+                #else:
+                #    other_flag='x'
 		#Choose a move based on some algorithm, here it is a random move.
-                optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 4)  #Levels to go
-		return optimal_move
+                #optimal_move = init_minimax(temp_board, temp_block, old_move, flag, other_flag, float("-inf"), float("inf"), 4)  #Levels to go
+		#return optimal_move
+                return cells[random.randrange(len(cells))]
+
 
 
 def init_minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, init_depth):
@@ -179,21 +194,22 @@ def init_minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA
         max_hvalue,maxX,maxY = float('-inf'),-1,-1
         for i,j in cells:
                 temp_board[i][j] = flag
-                local_hvalue = minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, init_depth-1)
+                local_hvalue = minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, 1,init_depth)
                 if local_hvalue > max_hvalue:
                         max_hvalue = local_hvalue
                         maxX = i
                         maxY = j
                 ALPHA = max(ALPHA, max_hvalue)
-                if BETA <= ALPHA:   # Beta cut-off
-                        temp_board[i][j] = '-'
-                        break;
                 temp_board[i][j] = '-'
+
+                if BETA <= ALPHA:   # Beta cut-off
+                        break;
+
         print 'Expected Max Hvalue:', max_hvalue, 'at', maxX, maxY
         return maxX,maxY
 
 
-def heuristic_9x9(board, pos, neg,blal):
+def heuristic_9x9(board, pos, neg, blal):
         global m
         big_boy = range(9)
         Hbig_boy = range(9)
@@ -202,91 +218,124 @@ def heuristic_9x9(board, pos, neg,blal):
                 R = (i/3)*3
                 C = (i%3)*3
                 if i in blal:
-                    Hbig_boy[i] = heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg)
+                        Hbig_boy[i] = heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg)
                 else:
-                    Hbig_boy[i] = (heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg) + heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], neg, pos))/2.0
-        s=[]
+                        Hbig_boy[i] = (heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], pos, neg) - heuristic_3x3(board[R][C:C+3], board[R+1][C:C+3], board[R+2][C:C+3], neg, pos))/2.0
+#        s=[]
+#        pass
         x=0.0
         for i in big_boy:
-            s.append('-')
-            if Hbig_boy[i] == 1.0:
-                s[i]=pos
-            elif Hbig_boy[i] == -1.0:
-                s[i]=neg
-            x+=Hbig_boy[i]
-        s.append(pos)
-        s=''.join(s)
-        x+=heuristic(s,pos,neg)
-        return x
+#                s.append('-')
+#                if Hbig_boy[i] == 1.0:
+#                        s[i]=pos
+#                elif Hbig_boy[i] == -1.0:
+#                        s[i]=neg
+                x+=Hbig_boy[i]
+
+        state = range(9)
+        for i in big_boy:
+                if Hbig_boy>=100:
+                        state[i] = pos
+                elif Hbig_boy <=-100:
+                        state[i] = neg
+                else:
+                        state[i] = '-'
+        bigH = 100*heuristic_3x3(state[0:3],state[3:6],state[6:9],pos,neg)
+
+#    for i in range(3):
+#
+#               if state[i+0] and state[i+1] and state[i+2]:
+#                        return
+
+#        s.append(pos)
+#        s=''.join(s)
+#        x+=2.5*heuristic(s,pos,neg)
+
+
+        return bigH+x
 
 
 
-#3_IN_A_ROW = 100
-#2_IN_A_ROW = 10
-#1_IN_A_ROW = 1
 def hsh(a,b,c,pos,m):
-    h=(100*(a==pos))+(10*(b==pos))+(c==pos)
-#    if h==0:
- #       return 0.0
-    if h==111:
-        return 0.25*m
-    elif h==101 or h==11 or h==110:
-        if a=='-' or b=='-' or c=='-':
-            return 0.1*m
-    return 0.0
-    
+        h=(100*(a==pos))+(10*(b==pos))+(c==pos)
+        #if h==0:
+        #        return 0.0
+        if h==111:
+                return 100*m
+        elif h==101 or h==11 or h==110:
+                if a=='-' or b=='-' or c=='-':
+                        return 5.3*m
+        return 0.0
+
+
 def heuristic(s,pos,neg):
 #        try:
- #           return m[s];
-  #      except KeyError:
-            if(check(s,pos)):
-                return 1.0
-            elif check(s,neg):
-                return -1.0
-            else:
-                x=0
-                y=0
-                x+=hsh(s[0],s[1],s[2],pos,2)
-                y+=hsh(s[0],s[1],s[2],neg,1)
-                x+=hsh(s[0],s[4],s[8],pos,2)
-                y+=hsh(s[0],s[4],s[8],neg,1)
-                x+=hsh(s[0],s[3],s[6],pos,2)
-                y+=hsh(s[0],s[3],s[6],neg,1)
-                x+=hsh(s[3],s[4],s[5],pos,2)
-                y+=hsh(s[3],s[4],s[5],neg,1)
-                x+=hsh(s[6],s[7],s[8],pos,2)
-                y+=hsh(s[6],s[7],s[8],neg,1)
-                x+=hsh(s[1],s[4],s[7],pos,2)
-                y+=hsh(s[1],s[4],s[7],neg,1)
-                x+=hsh(s[2],s[5],s[8],pos,2)
-                y+=hsh(s[2],s[5],s[8],neg,1)
-                x+=hsh(s[2],s[4],s[6],pos,2)
-                y+=hsh(s[2],s[4],s[6],neg,1)
-                return x-y
-def heuristic_3x3(row1, row2, row3, pos, neg):                          
+#                return m[s];
+#        except KeyError:
+#                pass
+
+#        if check(s,pos) == 1:
+#                print s
+#                return 5000.0
+#        elif check(s,neg) == 1:
+#                print '-jghg',s
+#                return -5000.0
+#        else:
+        x=0
+        y=0
+        x+=hsh(s[0],s[1],s[2],pos,2.5)
+        x+=hsh(s[0],s[4],s[8],pos,2.5)
+        x+=hsh(s[2],s[4],s[6],pos,2.5)
+        x+=hsh(s[0],s[3],s[6],pos,2.5)
+        x+=hsh(s[2],s[5],s[8],pos,2.5)
+        x+=hsh(s[3],s[4],s[5],pos,2.5)
+        x+=hsh(s[1],s[4],s[7],pos,2.5)
+        x+=hsh(s[6],s[7],s[8],pos,2.5)
+
+        y+=hsh(s[3],s[4],s[5],neg,1)
+        y+=hsh(s[6],s[7],s[8],neg,1)
+        y+=hsh(s[0],s[3],s[6],neg,1)
+        y+=hsh(s[1],s[4],s[7],neg,1)
+        y+=hsh(s[0],s[4],s[8],neg,1)
+        y+=hsh(s[2],s[5],s[8],neg,1)
+        y+=hsh(s[0],s[1],s[2],neg,1)
+        y+=hsh(s[2],s[4],s[6],neg,1)
+        return x-y
+
+
+def heuristic_3x3(row1, row2, row3, pos, neg):
         # Skip cells which are already won
-       # print row1,row2,row3
-#        print pos
+        #print row1,row2,row3
+        #print pos
         global m
         s=[]
         s+=row1
         s+=row2
-        s+=row3                                                   #currently assumed that we will call heuristic only at pos
+        s+=row3         # currently assumed that we will call heuristic only at pos
+        r=0.0
+        for i in s:
+                if i == pos:
+                        r+=0.1
+                elif i == neg:
+                        r-=0.1
         s=''.join(s)
         s+=pos
-        return heuristic(s,pos,neg)
+        return r+heuristic(s,pos,neg)
         #pass
 
 
 
 # Alpha-beta also added
-def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, depth):
-	# Just return hvalue.
-       # print heuristic_9x9(temp_board,flag,other_flag)
-        if depth <= 0:
+def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, depth, max_depth):
+        # Just return hvalue.
+        # print heuristic_9x9(temp_board,flag,other_flag)
+        if(check(temp_block,flag)):
+                return float('inf')/2
+
+        if depth >= max_depth:
                 # Return the Hvalue of this state.
                 blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
-                return heuristic_9x9(temp_board, flag,other_flag,blocks_allowed)
+                return heuristic_9x9(temp_board, flag, other_flag, blocks_allowed)
         elif depth%2 == 1:
                 # Find min
                 blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
@@ -295,13 +344,15 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
                 min_hvalue = float('inf')
                 for i,j in cells:
                         temp_board[i][j] = flag
-                        min_hvalue = min(min_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth-1))
+                        min_hvalue = min(min_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth+1,max_depth))
                         BETA = min(BETA, min_hvalue)
-                        if BETA <= ALPHA:   # Alpha cut-off
-                                temp_board[i][j] = '-'
-                                break;
                         temp_board[i][j] = '-'
+
+                        if BETA <= ALPHA:   # Alpha cut-off
+                                break;
         #        print "here",heuristic_9x9(temp_board,flag,other_flag)
+                if min_hvalue == float('inf'):
+                        min_hvalue = 0.0
                 return min_hvalue
 
         elif depth%2 == 0:
@@ -312,17 +363,19 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
                 max_hvalue = float('-inf')
                 for i,j in cells:
                         temp_board[i][j] = flag
-                        max_hvalue = max(max_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth-1))
+                        max_hvalue = max(max_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth+1,max_depth))
                         ALPHA = max(ALPHA, max_hvalue)
-                        if BETA <= ALPHA:   # Beta cut-off
-                                temp_board = '-'
-                                break;
                         temp_board[i][j] = '-'
-         #       print "here",heuristic_9x9(temp_board,flag,other_flag)
-                print len(temp_board)
-                print_lists(temp_board,temp_block)
+
+                        if BETA <= ALPHA:   # Beta cut-off
+                                break
+                #print "here",heuristic_9x9(temp_board,flag,other_flag)
+                #print len(temp_board)
+                #print_lists(temp_board,temp_block)
+                if max_hvalue == float('-inf'):
+                        max_hvalue = 0.0
                 return max_hvalue
-        
+
 
 def determine_blocks_allowed(old_move, block_stat):
 	blocks_allowed = []
@@ -559,12 +612,12 @@ def simulate(obj1,obj2):
 
 	WINNER = ''
 	MESSAGE = ''
-	TIMEALLOWED = 120
+	TIMEALLOWED = 15
 	p1_pts=0
 	p2_pts=0
 
 	print_lists(game_board, block_stat)
-        
+
 #        print heuristic_9x9(game_board,'x','o')
 
 	while(1): # Main game loop
@@ -657,6 +710,8 @@ if __name__ == '__main__':
  #       print heuristic("oxo---ox-x",'x','o')
   #      raw_input()
         start()
+        print heuristic("oo-------x",'x','o')
+        print heuristic("oox------o",'o','x')
 	if len(sys.argv) != 2:
 		print 'Usage: python simulator.py <option>'
 		print '<option> can be 1 => Random player vs. Random player'
@@ -668,11 +723,11 @@ if __name__ == '__main__':
 	obj2 = ''
 	option = sys.argv[1]
 	if option == '1':
-		obj1 = Player1()
+		obj1 = Player48()
 		obj2 = Player2()
 
 	elif option == '2':
-		obj1 = Player1()
+		obj1 = Player48()
 		obj2 = ManualPlayer()
 	elif option == '3':
 		obj1 = ManualPlayer()
@@ -681,7 +736,8 @@ if __name__ == '__main__':
 		print 'Invalid option'
 		sys.exit(1)
 
-	num = random.uniform(0,1)
+	num = 0.7
+        #random.uniform(0,1)
 	if num > 0.5:
 		simulate(obj2, obj1)
 	else:
