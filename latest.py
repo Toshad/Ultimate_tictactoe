@@ -145,9 +145,9 @@ class Player48:
                 if(old_move==(-1,-1)):
                     return (4,4)
 		#List of permitted blocks, based on old move.
-		blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
+		#blocks_allowed  = determine_blocks_allowed(old_move, temp_block)
 		#Get list of empty valid cells
-		cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
+		#cells = get_empty_out_of(temp_board, blocks_allowed,temp_block)
                 if flag=='x':
                     other_flag='o'
                 else:
@@ -194,7 +194,7 @@ def init_minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA
         max_hvalue,maxX,maxY = float('-inf'),-1,-1
         for i,j in cells:
                 temp_board[i][j] = flag
-                local_hvalue = minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, 1,init_depth)
+                local_hvalue = minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, 1, init_depth)
                 if local_hvalue > max_hvalue:
                         max_hvalue = local_hvalue
                         maxX = i
@@ -258,13 +258,14 @@ def heuristic_9x9(board, pos, neg, blal):
 
 def hsh(a,b,c,pos,m):
         h=(100*(a==pos))+(10*(b==pos))+(c==pos)
-        #if h==0:
-        #        return 0.0
         if h==111:
                 return 100*m
         elif h==101 or h==11 or h==110:
                 if a=='-' or b=='-' or c=='-':
-                        return 5.3*m
+                        return 10*m
+        elif h==1:
+                if ((a=='-' and b=='-') or (a=='-' and b=='-') or (b=='-' and c=='-')):
+                        return 1*m
         return 0.0
 
 
@@ -283,22 +284,24 @@ def heuristic(s,pos,neg):
 #        else:
         x=0
         y=0
-        x+=hsh(s[0],s[1],s[2],pos,2.5)
-        x+=hsh(s[0],s[4],s[8],pos,2.5)
-        x+=hsh(s[2],s[4],s[6],pos,2.5)
-        x+=hsh(s[0],s[3],s[6],pos,2.5)
-        x+=hsh(s[2],s[5],s[8],pos,2.5)
-        x+=hsh(s[3],s[4],s[5],pos,2.5)
-        x+=hsh(s[1],s[4],s[7],pos,2.5)
-        x+=hsh(s[6],s[7],s[8],pos,2.5)
+        x+=hsh(s[0],s[1],s[2],pos,1.2)
+        x+=hsh(s[0],s[4],s[8],pos,1.2)
+        x+=hsh(s[0],s[3],s[6],pos,1.2)
+
+        x+=hsh(s[2],s[4],s[6],pos,1.2)
+        x+=hsh(s[2],s[5],s[8],pos,1.2)
+        x+=hsh(s[3],s[4],s[5],pos,1.2)
+        x+=hsh(s[1],s[4],s[7],pos,1.2)
+        x+=hsh(s[6],s[7],s[8],pos,1.2)
+
+        y+=hsh(s[0],s[3],s[6],neg,1)
+        y+=hsh(s[0],s[4],s[8],neg,1)
+        y+=hsh(s[0],s[1],s[2],neg,1)
 
         y+=hsh(s[3],s[4],s[5],neg,1)
         y+=hsh(s[6],s[7],s[8],neg,1)
-        y+=hsh(s[0],s[3],s[6],neg,1)
         y+=hsh(s[1],s[4],s[7],neg,1)
-        y+=hsh(s[0],s[4],s[8],neg,1)
         y+=hsh(s[2],s[5],s[8],neg,1)
-        y+=hsh(s[0],s[1],s[2],neg,1)
         y+=hsh(s[2],s[4],s[6],neg,1)
         return x-y
 
@@ -308,19 +311,22 @@ def heuristic_3x3(row1, row2, row3, pos, neg):
         #print row1,row2,row3
         #print pos
         global m
+        H = 0.0
         s=[]
         s+=row1
         s+=row2
         s+=row3         # currently assumed that we will call heuristic only at pos
-        r=0.0
-        for i in s:
-                if i == pos:
-                        r+=0.1
-                elif i == neg:
-                        r-=0.1
-        s=''.join(s)
-        s+=pos
-        return r+heuristic(s,pos,neg)
+#        r=0.0
+#        for i in s:
+#                if i == pos:
+#                        r+=0.1
+#                elif i == neg:
+#                        r-=0.1
+#        s=''.join(s)
+#        s+=pos
+#        H += r
+        H += heuristic(s,pos,neg)
+        return H 
         #pass
 
 
@@ -329,8 +335,8 @@ def heuristic_3x3(row1, row2, row3, pos, neg):
 def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, depth, max_depth):
         # Just return hvalue.
         # print heuristic_9x9(temp_board,flag,other_flag)
-        if(check(temp_block,flag)):
-                return float('inf')/2
+        #if(check(temp_block,flag)):
+        #        return float('inf')/2
 
         if depth >= max_depth:
                 # Return the Hvalue of this state.
@@ -343,8 +349,8 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
 
                 min_hvalue = float('inf')
                 for i,j in cells:
-                        temp_board[i][j] = flag
-                        min_hvalue = min(min_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth+1,max_depth))
+                        temp_board[i][j] = other_flag
+                        min_hvalue = min(min_hvalue, minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth+1,max_depth))
                         BETA = min(BETA, min_hvalue)
                         temp_board[i][j] = '-'
 
@@ -352,6 +358,7 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
                                 break;
         #        print "here",heuristic_9x9(temp_board,flag,other_flag)
                 if min_hvalue == float('inf'):
+                        print 'HAVE NO VALID MOVES. SOME PROBLEM OCCURED'
                         min_hvalue = 0.0
                 return min_hvalue
 
@@ -362,8 +369,8 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
 
                 max_hvalue = float('-inf')
                 for i,j in cells:
-                        temp_board[i][j] = flag
-                        max_hvalue = max(max_hvalue, minimax(temp_board, temp_block, (i,j), flag, other_flag, ALPHA, BETA, depth+1,max_depth))
+                        temp_board[i][j] = other_flag
+                        max_hvalue = max(max_hvalue, minimax(temp_board, temp_block, (i,j), other_flag, flag, ALPHA, BETA, depth+1,max_depth))
                         ALPHA = max(ALPHA, max_hvalue)
                         temp_board[i][j] = '-'
 
@@ -373,6 +380,7 @@ def minimax(temp_board, temp_block, old_move, flag, other_flag, ALPHA, BETA, dep
                 #print len(temp_board)
                 #print_lists(temp_board,temp_block)
                 if max_hvalue == float('-inf'):
+                        print 'HAVE NO VALID MOVES. SOME PROBLEM OCCURED'
                         max_hvalue = 0.0
                 return max_hvalue
 
