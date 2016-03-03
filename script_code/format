@@ -1,0 +1,39 @@
+#	AMAN rAI
+###################################
+#import os
+#os.system("rm -r latest.pyc")
+#
+#import team9
+#from latest import *
+#p1 = Player48()
+#p2 = team9.Player9()
+#
+#flag = 1
+#if flag:
+#	simulate(p1,p2)
+#	print 'PlayerX = ', 'Latest'
+#else:
+#	simulate(p2,p1)
+#	print 'PlayerO = ', 'Latest'
+
+
+######################################
+#    VINAY
+#######################################
+
+import os
+os.system("rm -r latest.pyc")
+
+import team77
+from latest import *
+p1 = Player48()
+p2 = team77.Player77()
+
+flag = 1
+if flag:
+	simulate(p1,p2)
+	print 'PlayerX = ', 'Latest'
+else:
+	simulate(p2,p1)
+	print 'PlayerO = ', 'Latest'
+
