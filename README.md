@@ -1,8 +1,8 @@
 # ultimate-tic-tac-toe
 AI assignment 1  
 
-`python File Name:` <b>team32</b>  
-`Class name:`   <b>Player32</b>
+`python File Name:` <b>team48</b>  
+`Class name:`   <b>Player48</b>
 
 
 ### IMPORTANT Instructions
